@@ -74,7 +74,15 @@ public class MainActivity extends Activity {
         else try{
             c.append("Bluetooth: ").append(adapter.isEnabled()?"on":"off").append('\n');
             if(Build.VERSION.SDK_INT>=33){c.append("LE Audio: ").append(feature(adapter.isLeAudioSupported())).append('\n');c.append("LE broadcast source: ").append(feature(adapter.isLeAudioBroadcastSourceSupported())).append('\n');}else c.append("LE broadcast check requires Android 13+\n");
-            c.append("Paired devices (not necessarily connected): ").append(adapter.getBondedDevices().size()).append('\n');
+            if (Build.VERSION.SDK_INT < 31 || checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+                try {
+                    c.append("Paired devices (not necessarily connected): ").append(adapter.getBondedDevices().size()).append('\n');
+                } catch (SecurityException e) {
+                    c.append("Paired device access denied\n");
+                }
+            } else {
+                c.append("Paired device access requires Bluetooth permission\n");
+            }
         }catch(RuntimeException e){c.append("Bluetooth query failed: ").append(e.getClass().getSimpleName()).append('\n');}
         for(AudioDeviceInfo d:audio.getDevices(AudioManager.GET_DEVICES_OUTPUTS))if(mediaBluetooth(d)){
             outputs.put(d.getId(),d);CheckBox b=new CheckBox(this);b.setText(desc(d));b.setTextColor(Color.WHITE);b.setChecked(selected.contains(d.getId()));boxes.put(d.getId(),b);deviceList.addView(b);
